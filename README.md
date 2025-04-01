@@ -1,4 +1,4 @@
-# Lambdasword
+# LambdaSword
 
 ![image](https://github.com/user-attachments/assets/c22e37ed-efc6-46f2-afd3-b780dc2f042c)
 
