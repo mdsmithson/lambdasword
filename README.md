@@ -1,21 +1,12 @@
 # Lambdasword
 
-**TODO: Add description**
+![image](https://github.com/user-attachments/assets/c22e37ed-efc6-46f2-afd3-b780dc2f042c)
+
+Lambda Calculus inspired KJV Bible querying and graphing framework
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `lambdasword` to your list of dependencies in `mix.exs`:
+Install Elixir.
+Download files and run iex -S mix in the command prompt of the directory.
 
-```elixir
-def deps do
-  [
-    {:lambdasword, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/lambdasword>.
-
+Lambdasword.word("good")
