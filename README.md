@@ -9,8 +9,11 @@ Lambda Calculus inspired KJV Bible querying and graphing framework
 Install Elixir.
 Download files and run iex -S mix in the command prompt of the directory.
 
+Find all verses that have the word "good" and order the chapters chronologically, taking the first book.
+
 Lambdasword.word("good")
 
+```elixir
 iex(4)> Lambdasword.word("breadth",:chron) |> Enum.take(1)
 [
   {1,
@@ -21,3 +24,4 @@ iex(4)> Lambdasword.word("breadth",:chron) |> Enum.take(1)
       "Hast thou perceived the breadth of the earth? declare if thou knowest it all."}
    ]}
 ]
+```
