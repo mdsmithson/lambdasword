@@ -89,6 +89,8 @@ defmodule Lambdasword do
   }
   end
 
+  def book_by_order(o,i), do: order() |> Enum.map(fn {x,o_} -> {x,o_ |> elem(case o do :chron -> 1; :canon -> 0 end)} end ) |> Enum.filter(fn {x,y} -> y == i end) |> List.first |> elem(0)
+
   def order(results,order), do: results |> Enum.sort_by(fn {x,y,z} -> x |> elem(case order do :chron -> 1; :canon -> 0 end) end)
 
   def order(chapter), do: Map.get(order(),chapter)  
@@ -100,6 +102,6 @@ defmodule Lambdasword do
   def kjv_with_order({:word,word}), do: kjv({:word,word}) |> Enum.map(fn {c,v} -> {order(c|>String.split(" ")|>List.pop_at(-1)|>elem(1)|>Enum.join(" ")),c,v} end)  
 
   # Lambdasword.kjv_with_order({:word,"good"}) |> Lambdasword.order(:chron) |> Enum.group_by(fn {o,c,v} -> o |> elem(0) end)
-  def word(w,o \\ :canon), do: kjv_with_order({:word,w}) |> order(o) |> Enum.group_by(fn {o_,c,v} -> o_ |> elem(case o do :chron -> 1; :canon -> 0 end) end)
+  def word(w,o \\ :canon), do: kjv_with_order({:word,w}) |> order(o) |> Enum.group_by(fn {o_,c,v} -> o_ |> elem(case o do :chron -> 1; :canon -> 0 end) end) |> Enum.map(fn {x,y} -> {book_by_order(o,x),y} end)
 
 end
