@@ -104,10 +104,10 @@ defmodule Lambdasword do
   # Lambdasword.kjv_with_order({:word,"good"}) |> Lambdasword.order(:chron) |> Enum.group_by(fn {o,c,v} -> o |> elem(0) end)
   def word(w,o \\ :canon), do: kjv_with_order({:word,w}) |> order(o) |> Enum.group_by(fn {o_,c,v} -> o_ |> elem(case o do :chron -> 1; :canon -> 0 end) end) |> Enum.map(fn {x,y} -> {book_by_order(o,x),y} end)
 
-  def related(x) do
-    client = Ollama.init("http://localhost:11435/api/")
-    IO.puts Ollama.completion(client, [  model: "mistral",  prompt: x]) |> elem(1) |> Map.get("response")
-  end
+  # def related(x) do
+  #   client = Ollama.init("http://localhost:11435/api/")
+  #   IO.puts Ollama.completion(client, [  model: "mistral",  prompt: x]) |> elem(1) |> Map.get("response")
+  # end
 
   @moduledoc """
   An external set of functions to interact with Ollama local servers for Bible verse reference lookups.
@@ -173,28 +173,17 @@ defmodule Lambdasword do
   """
   def send_request(payload, server_url) do
     # Start inets and set up a named profile to avoid internal issues
-    :inets.start()
-    {:ok, pid} = :inets.start(:httpc, [{:profile, :ollama_verse}])
-
     with {:ok, json} <- Jason.encode(payload),
          url = String.to_charlist("#{server_url}/api/chat"),
          headers = [{'Content-Type', 'application/json'}],
          request = {url, headers, 'application/json', json},
-         {:ok, result} <- :httpc.request(:post, request, [{:timeout, 30_000}], [{:body_format, :binary}], :ollama_verse) do
-      :inets.stop(:httpc, pid) # Clean up the profile
+         {:ok, result} <- :httpc.request(:post, request, [{:timeout, 30_000}], [{:body_format, :binary}]) do
       case result do
         {{_version, 200, _reason}, _headers, body} ->
           Jason.decode(body)
         {{_version, status, reason}, _headers, _body} ->
           {:error, "Server returned status #{status}: #{to_string(reason)}"}
       end
-    else
-      {:error, reason} ->
-        :inets.stop(:httpc, pid)
-        {:error, "HTTP request failed: #{inspect(reason)}"}
-      error ->
-        :inets.stop(:httpc, pid)
-        {:error, "Unexpected error: #{inspect(error)}"}
     end
   end
 
@@ -228,24 +217,10 @@ defmodule Lambdasword do
     end
   end
 
-  @doc """
-  Command-line entry point.
-  """
-  # def main(args \\ []) do
-  #   case args do
-  #     [server_choice | rest] when length(rest) > 0 ->
-  #       verse_reference = Enum.join(rest, " ")
-  #       case get_related_reference(server_choice, verse_reference) do
-  #         {:ok, reference} -> IO.puts(reference)
-  #         {:error, message} -> 
-  #           IO.puts(message)
-  #           System.halt(1)
-  #       end
-  #     _ ->
-  #       IO.puts("Usage: elixir ollama_verse.exs <server_number> <verse_reference>")
-  #       System.halt(1)
-  #   end
-  # end
+  def burst(n,servers \\ 3), do: 0..n |> Enum.map(fn x -> 1..servers |> Enum.map(fn x -> x end) end) |> List.flatten
+
+  def find_references(v,n \\ 100), do: burst(n) |> Lambdasword.Parallel.fmap(fn x -> Lambdasword.get_related_reference(to_string(x),v) end) |> Enum.uniq
+
 end
 
 
