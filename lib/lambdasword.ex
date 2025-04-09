@@ -13,9 +13,8 @@ defmodule Lambdasword do
 
   """
 
-  def kjv do
-    Jason.decode!(File.read!("lib/kjv.json"))
-  end
+  def kjv, do: Jason.decode!(File.read!("lib/kjv.json"))
+  def kjv({:verse,v}), do: kjv() |> Enum.filter(fn {i,s} -> i == v end)
 
   def order do
     # Name, Canonical, Chronological
