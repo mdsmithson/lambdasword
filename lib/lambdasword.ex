@@ -146,24 +146,55 @@ defmodule Lambdasword do
   @doc """
   Prepares the payload for the Ollama API request.
   """
-  def prepare_payload(verse_reference) do
+  def prepare_payload(verse_reference,question) do
     %{
       model: "llama3.1:8b",
       messages: [
         %{
           role: "system",
-          content: """
-          You are a LLM AI Natural Language Assistant. Take the given Bible verse reference (e.g., 'John 3:16')
-          and provide a single related verse reference from the King James Version (KJV) that is
-          contextually connected in dispensational context and meaning. Return only the verse reference (e.g., 'Romans 5:8'),
-          not the full text, in JSON format as an object with 'related_reference' fields.
-          """
+          content: prompt(question)
         },
         %{role: "user", content: verse_reference}
       ],
       format: "json",
       stream: false
     }
+  end
+
+  def prompt(k) do
+  case k do
+    :ref -> """
+          You are a LLM AI Natural Language Assistant. Take the given Bible verse reference (e.g., '1Cor15:3')
+          and provide a single related verse reference from the King James Version (KJV) that is
+          contextually connected in dispensational context and meaning. Return only the verse reference (e.g., 'Romans 5:8'),
+          not the full text, in JSON format as an object with a 'answer' field.
+          """
+    :audience -> 
+          """
+          You are a LLM AI Natural Language Assistant. Take the given Bible verse from the (KJV) (e.g., 1Cor15:3) 
+          and determine the intended audience—Israel, Gentiles, or Both. Return only the audience in JSON format as 
+          an object with an 'answer' field.
+          """
+    :dispensation ->
+          """
+          You are a LLM AI Natural Language Assistant. Take the given Bible verse from the (KJV) (e.g., 1Cor15:3) 
+          and determine the dispensational context with regard to its gospel; return back with gospel of the kingdom, 
+          gospel of God, gospel of grace, everlasting gospel or gospel general. Return only the response 
+          in JSON format as an object with an 'answer' field.
+          """
+    :accordingto ->
+          """
+          You are a LLM AI Natural Language Assistant. Take the given Bible verse from the (KJV) (e.g., 1Cor15:3) 
+          and determine the if it is Prophetic (ie Acts3:21 Isa9 Isa11) return Prophetic if according to revelation of the mystery return Mystery. 
+          Return only the response in JSON format as an object with an 'answer' field.
+          """      
+    :towhom ->
+          """
+          You are Gentile living in 2025. Take the given Bible verse from the (KJV) (e.g., 1Cor15:3) 
+          and determine if it is "To you" or if is "For learning" meaning not to you but for your learning (e.g., 2Tim3:16 2Tim2:15). 
+          Return only the response as "To You" or "For learning" in JSON format as an object with an 'answer' field.
+          """
+     end
   end
 
   @doc """
@@ -193,7 +224,7 @@ defmodule Lambdasword do
   def process_response(result) do
     with %{"message" => %{"content" => content}} <- result,
          {:ok, evaluation} <- Jason.decode(content),
-         %{"related_reference" => reference} <- evaluation do
+         %{"answer" => reference} <- evaluation do
       {:ok, reference}
     else
       error ->
@@ -205,9 +236,9 @@ defmodule Lambdasword do
   Main function to process a verse reference and get a related reference.
   Returns {:ok, reference} or {:error, message}.
   """
-  def get_related_reference(server_choice, verse_reference) do
+  def call_llm(server_choice, verse_reference,question) do
     with {:ok, server_url} <- get_server_url(server_choice),
-         payload <- prepare_payload(verse_reference),
+         payload <- prepare_payload(verse_reference,question),
          {:ok, result} <- send_request(payload, server_url),
          {:ok, reference} <- process_response(result) do
       {:ok, reference}
@@ -218,7 +249,21 @@ defmodule Lambdasword do
 
   def burst(n,servers \\ 3), do: 0..n |> Enum.map(fn x -> 1..servers |> Enum.map(fn x -> x end) end) |> List.flatten
 
-  def find_references(v,n \\ 100), do: burst(n) |> Lambdasword.Parallel.fmap(fn x -> Lambdasword.get_related_reference(to_string(x),v) end) |> Enum.uniq
+  def ask_questions(v,q,n \\ 100), do: burst(n) |> Lambdasword.Parallel.fmap(fn x -> Lambdasword.call_llm(to_string(x),v,q) end) |> Enum.uniq |> Enum.map(fn x -> x |> elem(1) end)
+
+
+  def find_connecting_references(verses,q, n \\ 100) when is_list(verses) do
+    verses
+    |> Lambdasword.Parallel.fmap(fn verse -> ask_questions(verse,q,n) end) |> IO.inspect
+    |> Enum.reduce(fn refs, acc -> Enum.filter(refs, fn x -> x in acc end) end)
+    |> Enum.zip(verses)
+  end
+
+  def accordingto(verse) do
+
+    Lambdasword.ask_questions(verse,:ref,15) |> Lambdasword.Parallel.fmap(fn verse -> [verse,Lambdasword.ask_questions(verse,:accordingto,15)] end)
+
+  end
 
 end
 
@@ -234,8 +279,7 @@ end
 
 
 
-# #docker run -d --gpus "device=0" -v ollama1:/root/.ollama -p 11434:11434 -e CUDA_VISIBLE_DEVICES=0 --name ollama1 ollama/ollama
-# #docker run -d --gpus "device=1" -v ollama2:/root/.ollama -p 11435:11434 -e CUDA_VISIBLE_DEVICES=1 --name ollama2 ollama/ollama
+
 
 # # x = [
 # #   [1, "Genesis is OT"],

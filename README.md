@@ -8,6 +8,9 @@ Lambda Calculus inspired KJV Bible querying and graphing framework
 
 Install Elixir.
 Download files and run iex -S mix in the command prompt of the directory.
+Install Docker and Ollama (Example is configured to use 3 seperate instances of ollama with 3 gpus)
+# #docker run -d --gpus "device=0" -v ollama1:/root/.ollama -p 11434:11434 -e CUDA_VISIBLE_DEVICES=0 --name ollama1 ollama/ollama
+# #docker run -d --gpus "device=1" -v ollama2:/root/.ollama -p 11435:11434 -e CUDA_VISIBLE_DEVICES=1 --name ollama2 ollama/ollama
 
 Find all verses that have the word "good" and order the chapters chronologically, taking the first book.
 
@@ -32,3 +35,4 @@ iex(34)> Lambdasword.word("breadth",:chron) |> Enum.take(2)
    ]}
 ]
 ```
+
