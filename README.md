@@ -48,22 +48,24 @@ iex(34)> Lambdasword.word("breadth",:chron) |> Enum.take(2)
 
 
 ```elixir
-iex(118)> Lambdasword.accordingto("Rom11:25")                                                                                                                                                                                                                                                                                                                                                                                                                                                
+iex(14)> Lambdasword.references("Rom11:25",:accordingto)
 [
   ["Isaiah 29:10", ["Prophetic"]],
-  ["Isaiah 29:22", ["Prophetic", "Mystery"]],
-  ["Isaiah53:1", ["Prophetic", "Mystery"]],
-  ["Hosea 1:10", ["Prophetic"]],
-  ["Romans 9:27", ["Prophetic", "Mystery"]],
-  ["Isaiah 29:22-23", ["Prophetic", "Mystery"]],
-  ["Isaiah2:3", ["Prophetic"]],
-  ["Isaiah 29:22-24", ["Prophetic", "Mystery"]],
-  ["Romans 9:30", ["Mystery", "Prophetic"]],
   ["Romans 9:13", ["Prophetic"]],
-  ["Ezekiel 37:19", ["Prophetic"]],
+  ["Hosea 1:10", ["Prophetic"]],
+  ["Romans 9:25", ["Prophetic", "Mystery"]],
+  ["Isaiah 29:22-23", ["Prophetic", "Mystery"]],
+  ["Isaiah53:1", ["Prophetic"]],
+  ["Ephesians 2:12", ["Mystery"]],
+  ["Isaiah 29:22-24", ["Prophetic", "Mystery"]],
+  ["Romans 9:27", ["Prophetic", "Mystery"]],
   ["Romans 9:6", ["Mystery", "Prophetic"]],
-  ["Deuteronomy 29:24", ["Mystery", "Prophetic"]],
-  ["Romans 9:25", ["Prophetic", "Mystery"]]
+  ["Romans 9:26", ["Prophetic", "Mystery"]],
+  ["Isaiah 29:22", ["Prophetic", "Mystery"]],
+  ["Romans 9:22", ["Prophetic", "Mystery"]],
+  ["Ezekiel 37:19", ["Prophetic"]],
+  ["Romans 9:32", ["Prophetic", "Mystery"]],
+  ["Romans 9:30", ["Mystery", "Prophetic"]]
 ]
 ```
 
