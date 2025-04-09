@@ -14,13 +14,14 @@ defmodule Lambdasword.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger,:inets]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:ollama, "~> 0.5.1"},
       {:plug_cowboy, "~> 2.5"},
       {:jason, "~> 1.1"}
     ]

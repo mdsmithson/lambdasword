@@ -104,4 +104,265 @@ defmodule Lambdasword do
   # Lambdasword.kjv_with_order({:word,"good"}) |> Lambdasword.order(:chron) |> Enum.group_by(fn {o,c,v} -> o |> elem(0) end)
   def word(w,o \\ :canon), do: kjv_with_order({:word,w}) |> order(o) |> Enum.group_by(fn {o_,c,v} -> o_ |> elem(case o do :chron -> 1; :canon -> 0 end) end) |> Enum.map(fn {x,y} -> {book_by_order(o,x),y} end)
 
+  def related(x) do
+    client = Ollama.init("http://localhost:11435/api/")
+    IO.puts Ollama.completion(client, [  model: "mistral",  prompt: x]) |> elem(1) |> Map.get("response")
+  end
+
+  @moduledoc """
+  An external set of functions to interact with Ollama local servers for Bible verse reference lookups.
+  """
+
+  
+  @server_map %{
+    "1" => "http://192.168.7.145:11434",
+    "2" => "http://192.168.7.145:11435",
+    "3" => "http://192.168.7.144:11434"
+  }
+
+  @doc """
+  Gets the server URL based on the server choice.
+  Returns {:ok, url} or {:error, message}.
+  """
+  def get_server_url(server_choice) do
+    case Map.get(@server_map, server_choice) do
+      nil ->
+        available = Map.keys(@server_map) |> Enum.join(", ")
+        {:error, "Invalid server choice '#{server_choice}'. Available options are: #{available}"}
+      url ->
+        {:ok, url}
+    end
+  end
+
+  @doc """
+  Prepares the payload for the Ollama API request.
+  """
+  def prepare_payload(verse_reference) do
+    %{
+      model: "llama3.1:8b",
+      messages: [
+        %{
+          role: "system",
+          content: """
+          You are a LLM AI Natural Language Assistant. Take the given Bible verse reference (e.g., 'John 3:16')
+          and provide a single related verse reference from the King James Version (KJV) that is
+          contextually connected in dispensational context and meaning. Return only the verse reference (e.g., 'Romans 5:8'),
+          not the full text, in JSON format as an object with 'related_reference' fields.
+          """
+        },
+        %{role: "user", content: verse_reference}
+      ],
+      format: "json",
+      stream: false
+    }
+  end
+
+  @doc """
+  Sends request to the Ollama server using :httpc and returns the response.
+  Returns {:ok, result} or {:error, message}.
+  """
+  def send_request(payload, server_url) do
+    # Start inets and set up a named profile to avoid internal issues
+    :inets.start()
+    {:ok, pid} = :inets.start(:httpc, [{:profile, :ollama_verse}])
+
+    with {:ok, json} <- Jason.encode(payload),
+         url = String.to_charlist("#{server_url}/api/chat"),
+         headers = [{'Content-Type', 'application/json'}],
+         request = {url, headers, 'application/json', json},
+         {:ok, result} <- :httpc.request(:post, request, [{:timeout, 30_000}], [{:body_format, :binary}], :ollama_verse) do
+      :inets.stop(:httpc, pid) # Clean up the profile
+      case result do
+        {{_version, 200, _reason}, _headers, body} ->
+          Jason.decode(body)
+        {{_version, status, reason}, _headers, _body} ->
+          {:error, "Server returned status #{status}: #{to_string(reason)}"}
+      end
+    else
+      {:error, reason} ->
+        :inets.stop(:httpc, pid)
+        {:error, "HTTP request failed: #{inspect(reason)}"}
+      error ->
+        :inets.stop(:httpc, pid)
+        {:error, "Unexpected error: #{inspect(error)}"}
+    end
+  end
+
+  @doc """
+  Processes the API response and extracts the related reference.
+  Returns {:ok, reference} or {:error, message}.
+  """
+  def process_response(result) do
+    with %{"message" => %{"content" => content}} <- result,
+         {:ok, evaluation} <- Jason.decode(content),
+         %{"related_reference" => reference} <- evaluation do
+      {:ok, reference}
+    else
+      error ->
+        {:error, "Error processing response: #{inspect(error)}"}
+    end
+  end
+
+  @doc """
+  Main function to process a verse reference and get a related reference.
+  Returns {:ok, reference} or {:error, message}.
+  """
+  def get_related_reference(server_choice, verse_reference) do
+    with {:ok, server_url} <- get_server_url(server_choice),
+         payload <- prepare_payload(verse_reference),
+         {:ok, result} <- send_request(payload, server_url),
+         {:ok, reference} <- process_response(result) do
+      {:ok, reference}
+    else
+      {:error, message} -> {:error, message}
+    end
+  end
+
+  @doc """
+  Command-line entry point.
+  """
+  # def main(args \\ []) do
+  #   case args do
+  #     [server_choice | rest] when length(rest) > 0 ->
+  #       verse_reference = Enum.join(rest, " ")
+  #       case get_related_reference(server_choice, verse_reference) do
+  #         {:ok, reference} -> IO.puts(reference)
+  #         {:error, message} -> 
+  #           IO.puts(message)
+  #           System.halt(1)
+  #       end
+  #     _ ->
+  #       IO.puts("Usage: elixir ollama_verse.exs <server_number> <verse_reference>")
+  #       System.halt(1)
+  #   end
+  # end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+# #docker run -d --gpus "device=0" -v ollama1:/root/.ollama -p 11434:11434 -e CUDA_VISIBLE_DEVICES=0 --name ollama1 ollama/ollama
+# #docker run -d --gpus "device=1" -v ollama2:/root/.ollama -p 11435:11434 -e CUDA_VISIBLE_DEVICES=1 --name ollama2 ollama/ollama
+# # defmodule Parallel do
+# #   def fmap(list, func) when is_list(list) and is_function(func) do
+# #     list
+# #     |> Enum.map(fn item ->
+# #       Task.async(fn -> func.(item) end)
+# #     end)
+# #     |> Enum.map(&Task.await(&1, 300_000))  # 5 minutes timeout (300,000 ms)
+# #   end
+
+# #   def fmap([], _func), do: []
+# # end
+# # x = [
+# #   [1, "Genesis is OT"],
+# #   [1, "Matthew is OT"],
+# #   [2, "Luke is NT"],
+# #   [2, "Paul is Apostle to Israel only"],
+# #   [3, "Paul is from Egypt"],
+# #   [3, "Silence is golden"],
+# #   [3, "IO.putz 1"]
+# # ]
+# # x |> Parallel.fmap(fn [x,y] -> :os.cmd(String.to_charlist("python score.py " <> (to_string(x)) <> " " <> y)) end)
+
+
+# import requests
+# import json
+# import sys
+
+# def get_server_url(server_choice):
+#     server_map = {
+#         "1": "http://192.168.7.145:11434",
+#         "2": "http://192.168.7.145:11435",
+#         "3": "http://192.168.7.144:11434"
+#     }
+#     # Return the selected server URL or raise an error if invalid
+#     if server_choice not in server_map:
+#         print(f"Error: Invalid server choice '{server_choice}'. Available options are: {', '.join(server_map.keys())}")
+#         sys.exit(1)
+#     return server_map[server_choice]
+
+# def get_statement_and_server():
+#     if len(sys.argv) < 3:
+#         print("Usage: python script.py <server_number> <statement>")
+#         sys.exit(1)
+#     server_choice = sys.argv[1]
+#     statement = " ".join(sys.argv[2:])
+#     return server_choice, statement
+
+# # def prepare_payload(statement):
+# #     return {
+# #         "model": "llama3.1:8b",
+# #         "messages": [
+# #             {
+# #                 "role": "system",
+# #                 "content": (
+# #                     "You are Grok 3 built by xAI. Evaluate the accuracy of the user's statement "
+# #                     "and provide a score from 1 to 100, where 1 is completely inaccurate and "
+# #                     "100 is completely accurate. Return the result in JSON format as an object "
+# #                     "with 'statement', 'score', and 'reasoning' fields."
+# #                 )
+# #             },
+# #             {"role": "user", "content": statement}
+# #         ],
+# #         "format": "json",
+# #         "stream": False
+# #     }
+# def prepare_payload(verse_reference):
+#     return {
+#         "model": "llama3.1:8b",
+#         "messages": [
+#             {
+#                 "role": "system",
+#                 "content": (
+#                     "You are Grok 3 built by xAI. Take the given Bible verse reference (e.g., 'John 3:16') "
+#                     "and provide a single related verse reference from the King James Version (KJV) that is "
+#                     "contextually connected in theme or meaning. Return only the verse reference (e.g., 'Romans 5:8'), "
+#                     "not the full text, in JSON format as an object with 'related_reference' fields."
+#                 )
+#             },
+#             {"role": "user", "content": verse_reference}
+#         ],
+#         "format": "json",
+#         "stream": False
+#     }
+# def send_request(payload, server_url):
+#     try:
+#         response = requests.post(
+#             f"{server_url}/api/chat",
+#             json=payload,
+#             timeout=30
+#         )
+#         response.raise_for_status()  # Raise an exception for bad status codes
+#         return response.json()
+#     except requests.exceptions.RequestException as e:
+#         print(f"Error connecting to server {server_url}: {str(e)}")
+#         sys.exit(1)
+
+# def process_response(result):
+#     try:
+#         evaluation = json.loads(result["message"]["content"])
+#         return evaluation["related_reference"]
+#     except (KeyError, json.JSONDecodeError) as e:
+#         print(f"Error processing response: {str(e)}")
+#         sys.exit(1)
+
+# def main():
+#     server_choice, statement = get_statement_and_server()
+#     server_url = get_server_url(server_choice)
+#     payload = prepare_payload(statement)
+#     result = send_request(payload, server_url)
+#     score = process_response(result)
+#     print(score)
+
+# if __name__ == "__main__":
+#     main()
