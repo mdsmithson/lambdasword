@@ -112,7 +112,17 @@ defmodule Lambdasword do
   @moduledoc """
   An external set of functions to interact with Ollama local servers for Bible verse reference lookups.
   """
+  defmodule Parallel do
+    def fmap(list, func) when is_list(list) and is_function(func) do
+      list
+      |> Enum.map(fn item ->
+        Task.async(fn -> func.(item) end)
+      end)
+      |> Enum.map(&Task.await(&1, 300_000))  # 5 minutes timeout (300,000 ms)
+    end
 
+    def fmap([], _func), do: []
+  end
   
   @server_map %{
     "1" => "http://192.168.7.145:11434",
@@ -252,17 +262,7 @@ end
 
 # #docker run -d --gpus "device=0" -v ollama1:/root/.ollama -p 11434:11434 -e CUDA_VISIBLE_DEVICES=0 --name ollama1 ollama/ollama
 # #docker run -d --gpus "device=1" -v ollama2:/root/.ollama -p 11435:11434 -e CUDA_VISIBLE_DEVICES=1 --name ollama2 ollama/ollama
-# # defmodule Parallel do
-# #   def fmap(list, func) when is_list(list) and is_function(func) do
-# #     list
-# #     |> Enum.map(fn item ->
-# #       Task.async(fn -> func.(item) end)
-# #     end)
-# #     |> Enum.map(&Task.await(&1, 300_000))  # 5 minutes timeout (300,000 ms)
-# #   end
 
-# #   def fmap([], _func), do: []
-# # end
 # # x = [
 # #   [1, "Genesis is OT"],
 # #   [1, "Matthew is OT"],
@@ -273,96 +273,3 @@ end
 # #   [3, "IO.putz 1"]
 # # ]
 # # x |> Parallel.fmap(fn [x,y] -> :os.cmd(String.to_charlist("python score.py " <> (to_string(x)) <> " " <> y)) end)
-
-
-# import requests
-# import json
-# import sys
-
-# def get_server_url(server_choice):
-#     server_map = {
-#         "1": "http://192.168.7.145:11434",
-#         "2": "http://192.168.7.145:11435",
-#         "3": "http://192.168.7.144:11434"
-#     }
-#     # Return the selected server URL or raise an error if invalid
-#     if server_choice not in server_map:
-#         print(f"Error: Invalid server choice '{server_choice}'. Available options are: {', '.join(server_map.keys())}")
-#         sys.exit(1)
-#     return server_map[server_choice]
-
-# def get_statement_and_server():
-#     if len(sys.argv) < 3:
-#         print("Usage: python script.py <server_number> <statement>")
-#         sys.exit(1)
-#     server_choice = sys.argv[1]
-#     statement = " ".join(sys.argv[2:])
-#     return server_choice, statement
-
-# # def prepare_payload(statement):
-# #     return {
-# #         "model": "llama3.1:8b",
-# #         "messages": [
-# #             {
-# #                 "role": "system",
-# #                 "content": (
-# #                     "You are Grok 3 built by xAI. Evaluate the accuracy of the user's statement "
-# #                     "and provide a score from 1 to 100, where 1 is completely inaccurate and "
-# #                     "100 is completely accurate. Return the result in JSON format as an object "
-# #                     "with 'statement', 'score', and 'reasoning' fields."
-# #                 )
-# #             },
-# #             {"role": "user", "content": statement}
-# #         ],
-# #         "format": "json",
-# #         "stream": False
-# #     }
-# def prepare_payload(verse_reference):
-#     return {
-#         "model": "llama3.1:8b",
-#         "messages": [
-#             {
-#                 "role": "system",
-#                 "content": (
-#                     "You are Grok 3 built by xAI. Take the given Bible verse reference (e.g., 'John 3:16') "
-#                     "and provide a single related verse reference from the King James Version (KJV) that is "
-#                     "contextually connected in theme or meaning. Return only the verse reference (e.g., 'Romans 5:8'), "
-#                     "not the full text, in JSON format as an object with 'related_reference' fields."
-#                 )
-#             },
-#             {"role": "user", "content": verse_reference}
-#         ],
-#         "format": "json",
-#         "stream": False
-#     }
-# def send_request(payload, server_url):
-#     try:
-#         response = requests.post(
-#             f"{server_url}/api/chat",
-#             json=payload,
-#             timeout=30
-#         )
-#         response.raise_for_status()  # Raise an exception for bad status codes
-#         return response.json()
-#     except requests.exceptions.RequestException as e:
-#         print(f"Error connecting to server {server_url}: {str(e)}")
-#         sys.exit(1)
-
-# def process_response(result):
-#     try:
-#         evaluation = json.loads(result["message"]["content"])
-#         return evaluation["related_reference"]
-#     except (KeyError, json.JSONDecodeError) as e:
-#         print(f"Error processing response: {str(e)}")
-#         sys.exit(1)
-
-# def main():
-#     server_choice, statement = get_statement_and_server()
-#     server_url = get_server_url(server_choice)
-#     payload = prepare_payload(statement)
-#     result = send_request(payload, server_url)
-#     score = process_response(result)
-#     print(score)
-
-# if __name__ == "__main__":
-#     main()
