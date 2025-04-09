@@ -259,35 +259,10 @@ defmodule Lambdasword do
     |> Enum.zip(verses)
   end
 
-  def accordingto(verse) do
+  def references(verse,q) do
 
-    Lambdasword.ask_questions(verse,:ref,15) |> Lambdasword.Parallel.fmap(fn verse -> [verse,Lambdasword.ask_questions(verse,:accordingto,15)] end)
+    Lambdasword.ask_questions(verse,:ref,15) |> Lambdasword.Parallel.fmap(fn verse -> [verse,Lambdasword.ask_questions(verse,q,15)] end)
 
   end
 
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # x = [
-# #   [1, "Genesis is OT"],
-# #   [1, "Matthew is OT"],
-# #   [2, "Luke is NT"],
-# #   [2, "Paul is Apostle to Israel only"],
-# #   [3, "Paul is from Egypt"],
-# #   [3, "Silence is golden"],
-# #   [3, "IO.putz 1"]
-# # ]
-# # x |> Parallel.fmap(fn [x,y] -> :os.cmd(String.to_charlist("python score.py " <> (to_string(x)) <> " " <> y)) end)

@@ -67,3 +67,76 @@ iex(118)> Lambdasword.accordingto("Rom11:25")
 ]
 ```
 
+Dispensational research analysis
+
+```elixir
+iex(10)> Lambdasword.references("Eph3:9",:audience)
+[
+  ["Colossians 1:27", ["Both", "Gentiles"]],
+  ["Romans 11:25", ["Gentiles", "Both"]],
+  ["Ephesians 2:7", ["Gentiles", "Both"]],
+  ["Romans 16:25", ["Gentiles", "Both"]],
+  ["2Cor12:4", ["Both", "Gentiles"]],
+  ["Eph2:7", ["Both", "Gentiles"]],
+  ["Galatians 1:11", ["Both", "Gentiles"]],
+  ["2 Corinthians 4:6", ["Both", "Gentiles"]],
+  ["Acts 26:22", ["Both", "Gentiles"]],
+  ["1Cor2:7", ["Gentiles", "Both"]],
+  ["2 Corinthians 12:6", ["Gentiles", "Both"]],
+  ["Galatians 1:16", ["Both", "Gentiles"]],
+  ["2Cor12:6", ["Gentiles", "Both"]],
+  ["1 Corinthians 2:7", ["Both", "Gentiles"]]
+]
+iex(11)> Lambdasword.references("1Tim1:16",:audience)
+[
+  ["Romans 3:25", ["Both", "Gentiles"]],
+  ["2 Timothy 4:11", ["Both", "Gentiles"]],
+  ["Titus 3:4", ["Gentiles", "Both"]],
+  ["Romans 3:4", ["Gentiles", "Both"]],
+  ["2Thessalonians 2:10", ["Gentiles", "Both"]],
+  ["Hebrews 7:3", ["Both", "Gentiles"]],
+  ["Romans 3:20", ["Gentiles", "Both"]],
+  ["Ephesians 3:8", ["Both", "Gentiles"]],
+  ["Galatians 2:20", ["Both"]],
+  ["Ephesians 2:8", ["Both", "Gentiles"]],
+  ["Matthew 20:28", ["Both"]],
+  ["2Cor11:23", ["Both", "Gentiles"]],
+  ["Titus 3:9", ["Gentiles", "Both"]],
+  ["1 Timothy 1:15", ["Both", "Gentiles"]],
+  ["1 Corinthians 15:9", ["Gentiles", "Both"]],
+  ["3John 9", ["Gentiles", "Both"]],
+  ["2 Timothy 3:16", ["Both"]],
+  ["2Cor12:11", ["Both", "Gentiles"]],
+  ["2Tim 3:15", ["Both"]],
+  ["Ephesians 2:4", ["Both", "Gentiles"]],
+  ["Hebrews 2:14", ["Both", "Gentiles"]],
+  ["Acts 26:14", ["Gentiles", "Both"]],
+  ["Titus 3:5", ["Both", "Gentiles"]],
+  ["2 Corinthians 12:10", ["Both", "Gentiles"]],
+  ["2Tim 1:13", ["Gentiles", "Both"]]
+]
+iex(12)> Lambdasword.references("Acts2:38",:audience)
+[
+  ["Joel 2:32", ["Both"]],
+  ["Matthew 3:15", ["Both", "Israel", "Both (Israel/Gentiles)"]],
+  ["Ezekiel 36:26", ["Both", "Israel"]],
+  ["Acts 22:16", ["Both"]],
+  ["Ezekiel 36:25-27", ["Both", "Israel"]],
+  ["Ezekiel 36:25", ["Both", "Israel"]],
+  ["Hebrews 10:26", ["Both", "Gentiles"]],
+  ["Mark 16:16", ["Both"]],
+  ["Ezekiel 36:25-26", ["Both", "Israel"]],
+  ["Hebrews10:26-27", ["Both", "Gentiles"]],
+  ["Mark16:16", ["Both"]],
+  ["Hebrews10:16", ["Gentiles", "Both"]],
+  ["Hebrews6:1", ["Both", "Gentiles"]],
+  ["Hebrews 13:8", ["Both"]],
+  ["Luke 24:47", ["Both"]],
+  ["Joel 2:28", ["Both"]],
+  ["Hebrews 6:1-2", ["Both", "Gentiles"]],
+  ["Hebrews10:26", ["Both", "Gentiles"]],
+  ["Matthew 3:11", ["Both"]],
+  ["Hebrews6:2", ["Both", "Gentiles"]],
+  ["Mark 1:4", ["Both", "Gentiles"]]
+]
+```
