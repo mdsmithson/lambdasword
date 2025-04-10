@@ -256,7 +256,6 @@ defmodule Lambdasword do
     verses
     |> Lambdasword.Parallel.fmap(fn verse -> ask_questions(verse,q,n) end) |> IO.inspect
     |> Enum.reduce(fn refs, acc -> Enum.filter(refs, fn x -> x in acc end) end)
-    |> Enum.zip(verses)
   end
 
   def references(verse,q) do
