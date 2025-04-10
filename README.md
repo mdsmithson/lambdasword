@@ -142,3 +142,40 @@ iex(12)> Lambdasword.references("Acts2:38",:audience)
   ["Mark 1:4", ["Both", "Gentiles"]]
 ]
 ```
+
+
+Ranking References by given verse
+```elixir
+iex(153)> a = Lambdasword.references_by_weight("Isa11")                                                                                                                                                                                                                                                                                                                                                                                                                                      
+[
+  "Isa11",
+  [
+    [
+      [
+        {"Zechariah 12:3",
+         "# And in that day will I make Jerusalem a burdensome stone for all people: all that burden themselves with it shall be cut in pieces, though all the people of the earth be gathered together against it."}
+      ],
+      "2"
+    ],
+    [
+      [
+        {"Jeremiah 23:5",
+         "# Behold, the days come, saith the LORD, that I will raise unto David a righteous Branch, and a King shall reign and prosper, and shall execute judgment and justice in the earth."}
+      ],
+      87
+    ],
+    [
+      [
+        {"Genesis 3:15",
+         "And I will put enmity between thee and the woman, and between thy seed and her seed; it shall bruise thy head, and thou shalt bruise his heel."}
+      ],
+      72
+    ],
+    [
+      [
+        {"Romans 11:26",
+         "And so all Israel shall be saved: as it is written, There shall come out of Sion the Deliverer, and shall turn away ungodliness from Jacob:"}
+      ],
+      67
+    ],
+```

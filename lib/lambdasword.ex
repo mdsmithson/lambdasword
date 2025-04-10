@@ -15,6 +15,7 @@ defmodule Lambdasword do
 
   def kjv, do: Jason.decode!(File.read!("lib/kjv.json"))
   def kjv({:verse,v}), do: kjv() |> Enum.filter(fn {i,s} -> i == v end)
+  # def kjv({:verse})
 
   def order do
     # Name, Canonical, Chronological
@@ -271,7 +272,7 @@ defmodule Lambdasword do
 
   end
 
-  def references_by_weight(verse), do: [verse, Lambdasword.burst(10) |> Enum.zip(Lambdasword.ask_questions(verse,:ref)) |> Lambdasword.Parallel.fmap(fn {s,v} -> [v,Lambdasword.call_llm(to_string(s),verse,[:connection_weight,v])|>elem(1)]  end)|> Enum.sort_by(fn [x,y] -> y end,:desc)]
+  def references_by_weight(verse), do: [verse, Lambdasword.burst(10) |> Enum.zip(Lambdasword.ask_questions(verse,:ref)) |> Lambdasword.Parallel.fmap(fn {s,v} -> [Lambdasword.kjv({:verse,v}),Lambdasword.call_llm(to_string(s),verse,[:connection_weight,v])|>elem(1)]  end)|> Enum.sort_by(fn [x,y] -> y end,:desc)]
 
 
 end
