@@ -194,6 +194,13 @@ defmodule Lambdasword do
           and determine if it is "To you" or if is "For learning" meaning not to you but for your learning (e.g., 2Tim3:16 2Tim2:15). 
           Return only the response as "To You" or "For learning" in JSON format as an object with an 'answer' field.
           """
+    [:connection_weight, v] ->
+              """
+          You are a LLM AI Natural Language Assistant. Take the given Bible verse reference (e.g., '1Cor15:3')
+          and provide a score of how related it is in total verse reference count to #{v} that is
+          contextually connected in dispensational context and meaning. Return only the score as a number 0-100
+          in JSON format as an object with a 'answer' field.
+          """
      end
   end
 
@@ -263,5 +270,8 @@ defmodule Lambdasword do
     Lambdasword.ask_questions(verse,:ref,15) |> Lambdasword.Parallel.fmap(fn verse -> [verse,Lambdasword.ask_questions(verse,q,15)] end)
 
   end
+
+  def references_by_weight(verse), do: [verse, Lambdasword.burst(10) |> Enum.zip(Lambdasword.ask_questions(verse,:ref)) |> Lambdasword.Parallel.fmap(fn {s,v} -> [v,Lambdasword.call_llm(to_string(s),verse,[:connection_weight,v])|>elem(1)]  end)|> Enum.sort_by(fn [x,y] -> y end,:desc)]
+
 
 end
